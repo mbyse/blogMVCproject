@@ -1,0 +1,196 @@
+﻿@model PagedList.IPagedList<Blog.Models.BlogPost>
+@using PagedList.Mvc;
+
+<link  href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<link href="~/Content/PagedList.css" rel="stylesheet" type="text/css" /> 
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="~/Scripts/JS/bootstrap.min.js"></script>
+
+
+@{
+    ViewBag.Title = "Index";
+}
+    
+    <div class="page-header">
+        <div class="container">
+            <h1>Blog</h1>
+            <ul class="breadcrumb">
+                <li><a href="/">Home</a></li>
+                <li class="active">Tech Academy Blog</li>
+            </ul>
+        </div>
+    </div> 
+      
+    <div class="container-fluid" style="display:inline-flex; flex-direction:column; margin-left: 10%; width:80%;">
+        <div class="BeginForm" style="text-align:center;">
+
+            @using (Html.BeginForm("Index", "BlogPosts", FormMethod.Get))
+            {
+                <h3 class="heading"><span style="font-family: 'Libre Baskerville', serif;">Posts</span></h3>
+                <p class="lead"><span style="color:#ff9c00;">Search by author name or post title:</span></p>  
+                <span style="border: 1px solid #1a2b51; border-radius: 2px; padding: 4px 0px 4px 4px;">
+                    @Html.TextBox("SearchString", ViewBag.CurrentFilter as string, new { style = "border-width:0px; padding:0px;", placeholder = "Start typing..." })  
+                    <button type="submit" value="" class="btn-color"><span class="glyphicon glyphicon-search"/></button>     
+                </span>
+
+                <span>&nbsp; or &nbsp;</span>
+
+
+                <span style="border: 1px solid #1a2b51; border-radius: 2px; padding: 4px 0px 4px 4px;">
+                    <select name="sortMenu" id="sortMenu" style="border-width:0px; padding: 0px;">
+                        <option value="">Select a sorting filter...</option>
+                        <option value=@Url.Action("Index", "BlogPosts", new { sortOrder = ViewBag.TitleSortParm, currentFilter = ViewBag.CurrentFilter } )>Title</option>
+                        <option value=@Url.Action("Index", "BlogPosts", new { sortOrder = ViewBag.NameSortParm, currentFilter = ViewBag.CurrentFilter })>Author</option>
+                        <option value=@Url.Action("Index", "BlogPosts", new { sortOrder = ViewBag.DateSortParm })>Date Posted</option>
+                    </select>
+                </span>
+                    <script type="text/javascript">
+                        var urlmenu = document.getElementById('sortMenu');
+                        urlmenu.onchange = function () {
+                            open(this.options[this.selectedIndex].value, "_self");
+                        };
+                    </script>
+                    <br />
+             }
+        </div>
+    </div>
+        <!-- begin blog section -->
+        <div class="container-fluid" style="display:inline-flex; flex-direction:column; margin-left: 10%; width:80%; border:2px;" > 
+
+            @foreach (var item in Model)
+                {
+                    <div class="d-inline-flex p-2 blog-card">
+                        <div class="flex-container blog-media col-lg-4 col-md-4 col-sm-8">  
+                            <!-- media -->
+                                @if (!String.IsNullOrEmpty(item.Image))
+                                {
+                                    <!-- image -->
+                                    <div class="flex-item">
+                                        @*  @Html.DisplayNameFor(model => model.FirstOrDefault().Image) *@
+                                        <div class="container mt-20 mb-20">
+                                            <div class="row">
+                                                <div class="col-sm-12">
+                                                    <div>
+                                                        <img src="@Html.DisplayFor(modelItem => item.Image)" alt="" height="150" width="200" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                else if (!String.IsNullOrEmpty(item.Video))
+                                {
+                                <!-- video can add in img-responive and fa controls to make similar to podcast -->
+                                <div class="flex-item">
+                                    <div class="container mt-20 mb-20">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div>
+                                                    <iframe width="200" height="150" src="@String.Concat("https://www.youtube.com/embed/", @Html.DisplayFor(model => item.Video))"
+                                                            frameborder="0" allowfullscreen></iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                }
+                                else
+                                {
+                                <div class="flex-item">
+                                    <div class="container">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div style="width: 200px; height:150px">
+                                                    &nbsp;
+                                               </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                }
+                            </div>
+                            <div class="flex-item blog-body col-lg-8 col-md-8 col-sm-8">
+                                <!-- body -->
+                                <div>
+
+                                    @*@ <h3> @Html.DisplayNameFor(model => model.FirstOrDefault())</h3>*@
+                                    <h3> @Html.DisplayFor(modelItem => item.Title)</h3>
+
+                                    <h4> @Html.DisplayNameFor(model => model.FirstOrDefault().Author): @Html.DisplayFor(modelItem => item.Author)</h4>
+
+                                    @Html.DisplayFor(modelItem => item.Post)
+
+
+                                    <br />
+                                    @Html.DisplayFor(modelItem => item.DatePosted)
+
+                                    <br />
+
+                                    @*<span id="@item.BlogPostId">@item.Likes</span>*@
+
+                                    <button id="@item.BlogPostId" class="glyphicon glyphicon-thumbs-up" style="background:none; border: none; box-sizing: unset;"></button>
+                                    <span id="displayLikes">@item.Likes</span>
+
+
+                   <script>
+                    $("#@item.BlogPostId").click(function () {
+                        var blogId = "@item.BlogPostId";
+                        var url = "/BlogPosts/AddLike?id=" + blogId;
+
+                $.ajax({
+                    type: "POST",
+                    url: url,
+
+                    success: function (data) {
+                        console.log(data);
+                       
+                        $("#@item.BlogPostId ~ span:first").html("" + data + " Likes");
+                    }
+
+                })
+
+                    })
+                                    </script>
+
+
+                                    <div class="flex-item">
+                                        @Html.ActionLink("Edit", "Edit", new { id = item.BlogPostId }) |
+                                        @Html.ActionLink("Details", "Details", new { id = item.BlogPostId }) |
+                                        @Html.ActionLink("Delete", "Delete", new { id = item.BlogPostId }) |
+                                        @Html.ActionLink(" ", "Create", "BlogComments", new { id = item.BlogPostId }, new { @class = "glyphicon glyphicon-comment" })
+                                    </div>
+                                    <br />
+                                </div>
+                                <br />
+
+                                @foreach (var thang in item.BlogComments)
+                                {
+                                    <div class="flex-item" style="padding-left:5%;">
+                                        <h5>
+                                            <img src="~/Content/Images/profile2.jpg" alt="" id="comment-image" class="img-fluid" />
+                                            @Html.DisplayFor(modelItem => thang.Name)
+                                        </h5>
+                                        <h6>
+                                            @Html.DisplayFor(modelItem => thang.DatePosted)
+                                        </h6>
+                                        @Html.DisplayFor(modelItem => thang.Comment)
+                                        <br />
+                                        <br />
+                                    </div>
+                                }
+                            </div>
+                    </div>
+             }
+         </div>
+                    <!-- end blog section-->
+             
+
+
+    <br />
+
+    <div style="text-align:center">
+        Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+        @Html.PagedListPager(Model, page => Url.Action("Index",
+        new { page, sortOrder = ViewBag.CurrentSort, currentFilter = ViewBag.CurrentFilter }))
+    </div>
